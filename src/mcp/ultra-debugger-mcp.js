@@ -331,7 +331,9 @@ async function analyzeFile(filePath) {
         eslintConfig.overrideConfig.rules = {
           ...eslintConfig.overrideConfig.rules,
           "@typescript-eslint/no-unused-vars": "warn",
-          "@typescript-eslint/no-explicit-any": "warn"
+          "@typescript-eslint/no-explicit-any": "warn",
+          "@typescript-eslint/no-inferrable-types": "warn",
+          "@typescript-eslint/prefer-as-const": "warn"
         };
       }
       
@@ -350,7 +352,9 @@ async function analyzeFile(filePath) {
         eslintConfig.overrideConfig.rules = {
           ...eslintConfig.overrideConfig.rules,
           "react/react-in-jsx-scope": "off", // Not needed in React 17+
-          "react/prop-types": "off" // We're using TypeScript instead
+          "react/prop-types": "off", // We're using TypeScript instead
+          "react/jsx-key": "error",
+          "react/no-children-prop": "warn"
         };
       }
       
@@ -524,7 +528,7 @@ function generateFixSuggestions(analysisResult) {
             ruleId: message.ruleId,
             severity: message.severity === 1 ? "warning" : "error",
             message: message.message,
-            suggestion: getFixSuggestion(message.ruleId, message.message)
+            suggestion: getFixSuggestion(message.ruleId, message.message, result.filePath)
           });
         });
       }
@@ -543,7 +547,7 @@ function generateFixSuggestions(analysisResult) {
                 ruleId: message.ruleId,
                 severity: message.severity === 1 ? "warning" : "error",
                 message: message.message,
-                suggestion: getFixSuggestion(message.ruleId, message.message)
+                suggestion: getFixSuggestion(message.ruleId, message.message, result.filePath)
               });
             });
           }
@@ -555,21 +559,66 @@ function generateFixSuggestions(analysisResult) {
   return suggestions;
 }
 
-// Get specific fix suggestions based on rule IDs
-function getFixSuggestion(ruleId, message) {
-  const suggestions = {
+// Get specific fix suggestions based on rule IDs with context-aware advice
+function getFixSuggestion(ruleId, message, filePath) {
+  // Determine file type for context-aware suggestions
+  const extension = path.extname(filePath).toLowerCase();
+  const isTypeScript = extension === '.ts' || extension === '.tsx';
+  const isReact = extension === '.jsx' || extension === '.tsx';
+  
+  // Generic suggestions
+  const genericSuggestions = {
     "no-undef": "Declare the variable or check if it exists before using it",
     "no-unused-vars": "Remove the unused variable or use it in your code",
     "no-unreachable": "Remove the unreachable code or restructure your logic",
     "no-debugger": "Remove the debugger statement before deploying to production",
-    "no-dupe-keys": "Rename the duplicate object keys to be unique",
-    "@typescript-eslint/no-unused-vars": "Remove the unused variable or use it in your code, or prefix with an underscore",
-    "@typescript-eslint/no-explicit-any": "Specify a more specific type instead of 'any'",
-    "react/react-in-jsx-scope": "Import React or use the new JSX transform",
-    "react/prop-types": "Use TypeScript interfaces for prop typing instead"
+    "no-dupe-keys": "Rename the duplicate object keys to be unique"
   };
-
-  return suggestions[ruleId] || "Review the code and fix according to the error message";
+  
+  // TypeScript-specific suggestions
+  const typescriptSuggestions = {
+    "@typescript-eslint/no-unused-vars": "Remove the unused variable or use it in your code. For intentionally unused variables, prefix with an underscore (_variableName)",
+    "@typescript-eslint/no-explicit-any": "Specify a more specific type instead of 'any'. Consider using 'unknown' for safer typing, or define an interface/type for the expected structure",
+    "@typescript-eslint/no-inferrable-types": "Remove the type annotation as it can be inferred from the assigned value",
+    "@typescript-eslint/prefer-as-const": "Use 'as const' instead of explicit type annotation for literal types",
+    "@typescript-eslint/no-empty-interface": "Remove the empty interface or extend another interface",
+    "@typescript-eslint/no-non-null-assertion": "Avoid using the non-null assertion operator (!). Instead, check for null/undefined explicitly",
+    "@typescript-eslint/array-type": "Use the generic syntax Array<T> instead of T[] for consistency, or vice versa",
+    "@typescript-eslint/consistent-type-assertions": "Use 'as Type' instead of '<Type>' for type assertions to avoid conflicts with JSX syntax"
+  };
+  
+  // React-specific suggestions
+  const reactSuggestions = {
+    "react/jsx-key": "Add a unique 'key' prop to each element in the list. The key should be a stable identifier, not an array index",
+    "react/no-children-prop": "Pass children as nested JSX elements instead of using the 'children' prop",
+    "react/react-in-jsx-scope": "Import React or configure the new JSX transform in your build system",
+    "react/prop-types": "Use TypeScript interfaces or the PropTypes package to define prop types",
+    "react/jsx-no-duplicate-props": "Remove duplicate props. Prop names are case-insensitive",
+    "react/jsx-no-undef": "Make sure the component is imported or defined before using it in JSX",
+    "react/no-danger": "Avoid using 'dangerouslySetInnerHTML' when possible. If needed, sanitize the HTML input",
+    "react/no-deprecated": "Replace deprecated React APIs with their modern alternatives",
+    "react/no-direct-mutation-state": "Use 'setState()' to update component state instead of mutating 'this.state' directly",
+    "react/no-find-dom-node": "Use 'refs' or 'ReactDOM.findDOMNode()' alternatives",
+    "react/no-is-mounted": "Check component lifecycle or use hooks instead of 'isMounted()'",
+    "react/no-render-return-value": "Do not depend on the return value of 'ReactDOM.render()'",
+    "react/no-string-refs": "Use callback refs or 'createRef()' instead of string refs",
+    "react/no-unescaped-entities": "Escape special characters like '>', '<', '}', '\"' in JSX text or use expressions",
+    "react/no-unknown-property": "Use the correct DOM property name. For example, use 'className' instead of 'class'",
+    "react/require-render-return": "Ensure 'render()' method returns a value",
+    "react/self-closing-comp": "Use self-closing syntax for components without children"
+  };
+  
+  // Context-aware suggestions
+  if (isTypeScript && typescriptSuggestions[ruleId]) {
+    return typescriptSuggestions[ruleId];
+  }
+  
+  if (isReact && reactSuggestions[ruleId]) {
+    return reactSuggestions[ruleId];
+  }
+  
+  // Return generic suggestion if no specific one found
+  return genericSuggestions[ruleId] || "Review the code and fix according to the error message";
 }
 
 // Handle graceful shutdown

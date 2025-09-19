@@ -10,7 +10,7 @@ A robust Model Context Protocol (MCP) debugger for JavaScript, TypeScript, JSX, 
 - **TypeScript Support**: Leverages @typescript-eslint for TypeScript-specific rules
 - **React Support**: Uses eslint-plugin-react for JSX/React-specific rules
 - **Real-time Analysis**: Identifies syntax errors, potential bugs, and code quality issues
-- **Fix Suggestions**: Provides actionable suggestions for resolving identified issues
+- **Enhanced Fix Suggestions**: Provides detailed, context-aware suggestions for resolving issues
 - **Multi-file Support**: Analyze single files or entire projects at once
 - **Live Analysis**: Real-time monitoring of code changes with instant feedback
 - **Fallback Analysis**: Uses custom analysis when ESLint is not available
@@ -41,7 +41,13 @@ The Ultra Debugger analyzes code using multiple approaches:
    - Automatic re-analysis when files change
    - Continuous monitoring of project directories
 
-5. **Fallback Analysis**: When ESLint is not available, uses custom pattern matching to detect:
+5. **Enhanced Fix Suggestions**: Provides context-aware, detailed suggestions:
+   - Generic JavaScript fixes
+   - TypeScript-specific recommendations
+   - React/JSX best practices
+   - Framework-specific guidance
+
+6. **Fallback Analysis**: When ESLint is not available, uses custom pattern matching to detect:
    - Debugger statements
    - Unreachable code
    - Common coding issues
@@ -143,10 +149,40 @@ The Ultra Debugger detects common issues including:
 ### TypeScript-Specific Rules:
 - **Type Safety**: Explicit any usage, unused variables
 - **TypeScript Best Practices**: Proper typing, interface usage
+- **Advanced Type Checking**: Non-null assertions, inferrable types, consistent array types
 
 ### React/JSX-Specific Rules:
 - **Component Structure**: Proper component definitions
 - **Props Handling**: Prop validation, proper prop usage
+- **JSX Best Practices**: Key props, self-closing tags, unescaped entities
+
+## Enhanced Fix Suggestions
+
+The Ultra Debugger provides detailed, context-aware fix suggestions for all detected issues:
+
+### Generic JavaScript Fixes:
+- Undefined variables
+- Unused variables
+- Unreachable code
+- Debugger statements
+- Duplicate object keys
+
+### TypeScript-Specific Suggestions:
+- **no-explicit-any**: "Specify a more specific type instead of 'any'. Consider using 'unknown' for safer typing, or define an interface/type for the expected structure"
+- **no-inferrable-types**: "Remove the type annotation as it can be inferred from the assigned value"
+- **prefer-as-const**: "Use 'as const' instead of explicit type annotation for literal types"
+- **no-empty-interface**: "Remove the empty interface or extend another interface"
+- **no-non-null-assertion**: "Avoid using the non-null assertion operator (!). Instead, check for null/undefined explicitly"
+- **array-type**: "Use the generic syntax Array<T> instead of T[] for consistency, or vice versa"
+- **consistent-type-assertions**: "Use 'as Type' instead of '<Type>' for type assertions to avoid conflicts with JSX syntax"
+
+### React/JSX-Specific Suggestions:
+- **jsx-key**: "Add a unique 'key' prop to each element in the list. The key should be a stable identifier, not an array index"
+- **no-children-prop**: "Pass children as nested JSX elements instead of using the 'children' prop"
+- **jsx-no-duplicate-props**: "Remove duplicate props. Prop names are case-insensitive"
+- **no-unknown-property**: "Use the correct DOM property name. For example, use 'className' instead of 'class'"
+- **no-unescaped-entities**: "Escape special characters like '>', '<', '}', '\"' in JSX text or use expressions"
+- **self-closing-comp**: "Use self-closing syntax for components without children"
 
 ## Live Analysis
 
@@ -172,6 +208,7 @@ AI assistants that support the Model Context Protocol can use the Ultra Debugger
 3. Provide code quality improvements
 4. Offer specific suggestions for resolving issues
 5. Monitor code changes in real-time for continuous feedback
+6. Provide detailed, context-aware fix recommendations
 
 ## Limitations
 
@@ -187,3 +224,4 @@ AI assistants that support the Model Context Protocol can use the Ultra Debugger
 - Integration with more linting tools
 - Support for additional frameworks (Vue, Angular, etc.)
 - Enhanced live analysis reporting through MCP
+- Machine learning-based suggestion improvements
