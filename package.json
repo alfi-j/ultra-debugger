@@ -1,0 +1,23 @@
+{
+  "name": "ultra-debugger",
+  "version": "1.0.0",
+  "description": "An automated debugging tool for AI-generated software",
+  "main": "src/middleware/debugController.js",
+  "scripts": {
+    "debug": "node ultra-debugger.js",
+    "test": "node ultra-debugger.js test/example.js"
+  },
+  "keywords": [
+    "debugger",
+    "ai",
+    "automation",
+    "code-analysis"
+  ],
+  "author": "Ultra Debugger Team",
+  "license": "MIT",
+  "dependencies": {},
+  "devDependencies": {},
+  "bin": {
+    "ultra-debugger": "ultra-debugger.js"
+  }
+}
