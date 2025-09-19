@@ -12,6 +12,7 @@ A robust Model Context Protocol (MCP) debugger for JavaScript, TypeScript, JSX, 
 - **Real-time Analysis**: Identifies syntax errors, potential bugs, and code quality issues
 - **Fix Suggestions**: Provides actionable suggestions for resolving identified issues
 - **Multi-file Support**: Analyze single files or entire projects at once
+- **Live Analysis**: Real-time monitoring of code changes with instant feedback
 - **Fallback Analysis**: Uses custom analysis when ESLint is not available
 
 ## How It Works
@@ -35,7 +36,12 @@ The Ultra Debugger analyzes code using multiple approaches:
    - Prop validation issues
    - React best practices
 
-4. **Fallback Analysis**: When ESLint is not available, uses custom pattern matching to detect:
+4. **Live Analysis**: Uses file system watchers to monitor code changes in real-time:
+   - Instant feedback on code modifications
+   - Automatic re-analysis when files change
+   - Continuous monitoring of project directories
+
+5. **Fallback Analysis**: When ESLint is not available, uses custom pattern matching to detect:
    - Debugger statements
    - Unreachable code
    - Common coding issues
@@ -50,10 +56,21 @@ When running as an MCP server, the Ultra Debugger exposes the following tools:
 2. **analyze_multiple_files** - Analyze multiple files
    - Parameters: `file_paths` (array of strings)
 
-3. **get_analysis_report** - Get the detailed report from the last analysis operation
+3. **watch_file** - Start live analysis of a file or directory
+   - Parameters: 
+     - `path` (string): Path to the file or directory to watch
+     - `watch_id` (string): Unique identifier for this watch session
+
+4. **unwatch_file** - Stop live analysis of a previously watched file or directory
+   - Parameters: `watch_id` (string): Unique identifier for the watch session to stop
+
+5. **list_watch_sessions** - List all active watch sessions
    - No parameters
 
-4. **get_fix_suggestions** - Get suggestions for fixing issues found in the last analysis
+6. **get_analysis_report** - Get the detailed report from the last analysis operation
+   - No parameters
+
+7. **get_fix_suggestions** - Get suggestions for fixing issues found in the last analysis
    - No parameters
 
 ## Installation
@@ -131,6 +148,21 @@ The Ultra Debugger detects common issues including:
 - **Component Structure**: Proper component definitions
 - **Props Handling**: Prop validation, proper prop usage
 
+## Live Analysis
+
+The Ultra Debugger supports real-time code analysis through file watching:
+
+1. **File Watching**: Monitor individual files or entire directories for changes
+2. **Instant Feedback**: Get immediate analysis results when code is modified
+3. **Continuous Monitoring**: Keep watching files until explicitly stopped
+4. **Multiple Sessions**: Run multiple watch sessions simultaneously with unique IDs
+
+To use live analysis with MCP tools:
+1. Call `watch_file` with a path and unique watch ID
+2. View live analysis output in the server console
+3. Call `unwatch_file` with the watch ID to stop monitoring
+4. Use `list_watch_sessions` to see active watch sessions
+
 ## Integration with AI Assistants
 
 AI assistants that support the Model Context Protocol can use the Ultra Debugger to:
@@ -139,12 +171,14 @@ AI assistants that support the Model Context Protocol can use the Ultra Debugger
 2. Identify and fix syntax errors and potential bugs
 3. Provide code quality improvements
 4. Offer specific suggestions for resolving issues
+5. Monitor code changes in real-time for continuous feedback
 
 ## Limitations
 
 - Does not execute code (static analysis only)
 - Limited rules when falling back from ESLint
 - Requires proper file extensions to detect file type
+- Live analysis reports to console, not directly through MCP
 
 ## Future Improvements
 
@@ -152,3 +186,4 @@ AI assistants that support the Model Context Protocol can use the Ultra Debugger
 - Web-based dashboard for analysis results
 - Integration with more linting tools
 - Support for additional frameworks (Vue, Angular, etc.)
+- Enhanced live analysis reporting through MCP

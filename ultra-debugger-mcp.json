@@ -1,7 +1,7 @@
 {
   "name": "ultra-debugger",
   "version": "1.0.0",
-  "description": "A robust Model Context Protocol debugger for JavaScript, TypeScript, JSX, and TSX files",
+  "description": "A robust Model Context Protocol debugger for JavaScript, TypeScript, JSX, and TSX files with live analysis capabilities",
   "capabilities": {
     "tools": {}
   },

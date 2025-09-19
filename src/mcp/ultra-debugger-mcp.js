@@ -4,6 +4,7 @@ const { CallToolRequestSchema, ListToolsRequestSchema } = require("@modelcontext
 const { ESLint } = require("eslint");
 const fs = require("fs").promises;
 const path = require("path");
+const chokidar = require("chokidar");
 
 // Create the MCP server
 const server = new Server(
@@ -17,6 +18,7 @@ const server = new Server(
 
 // Store analysis results
 let lastAnalysisResult = null;
+let liveWatchers = new Map(); // Store active file watchers for live analysis
 
 // Register the list_tools handler
 server.setRequestHandler(ListToolsRequestSchema, async () => {
@@ -49,6 +51,46 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
             }
           },
           required: ["file_paths"]
+        }
+      },
+      {
+        name: "watch_file",
+        description: "Start live analysis of a file or directory, providing real-time feedback on code changes",
+        inputSchema: {
+          type: "object",
+          properties: {
+            path: {
+              type: "string",
+              description: "Path to the file or directory to watch"
+            },
+            watch_id: {
+              type: "string",
+              description: "Unique identifier for this watch session"
+            }
+          },
+          required: ["path", "watch_id"]
+        }
+      },
+      {
+        name: "unwatch_file",
+        description: "Stop live analysis of a previously watched file or directory",
+        inputSchema: {
+          type: "object",
+          properties: {
+            watch_id: {
+              type: "string",
+              description: "Unique identifier for the watch session to stop"
+            }
+          },
+          required: ["watch_id"]
+        }
+      },
+      {
+        name: "list_watch_sessions",
+        description: "List all active watch sessions",
+        inputSchema: {
+          type: "object",
+          properties: {}
         }
       },
       {
@@ -103,6 +145,93 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           content: [{
             type: "text",
             text: `Multi-file analysis completed for ${args.file_paths.length} files. Total errors: ${lastAnalysisResult.totalErrors}, Total warnings: ${lastAnalysisResult.totalWarnings}.`
+          }]
+        };
+      }
+
+      case "watch_file": {
+        if (!args.path) {
+          throw new Error("path is required");
+        }
+        
+        if (!args.watch_id) {
+          throw new Error("watch_id is required");
+        }
+        
+        // Check if path exists
+        try {
+          await fs.access(args.path);
+        } catch (error) {
+          throw new Error(`Path does not exist: ${args.path}`);
+        }
+        
+        // Stop any existing watcher with the same ID
+        if (liveWatchers.has(args.watch_id)) {
+          liveWatchers.get(args.watch_id).close();
+        }
+        
+        // Create a new watcher
+        const watcher = chokidar.watch(args.path, {
+          persistent: true,
+          ignoreInitial: true,
+          depth: 5 // Limit recursion depth
+        });
+        
+        // Store the watcher
+        liveWatchers.set(args.watch_id, watcher);
+        
+        // Set up event handlers
+        watcher
+          .on('add', (filePath) => {
+            console.log(`[LIVE] File ${filePath} has been added`);
+            // Analyze new files
+            analyzeAndReport(filePath);
+          })
+          .on('change', (filePath) => {
+            console.log(`[LIVE] File ${filePath} has been changed`);
+            // Re-analyze changed files
+            analyzeAndReport(filePath);
+          })
+          .on('unlink', (filePath) => {
+            console.log(`[LIVE] File ${filePath} has been removed`);
+          })
+          .on('error', (error) => {
+            console.error(`[LIVE] Watcher error for ${args.watch_id}:`, error);
+          });
+        
+        return {
+          content: [{
+            type: "text",
+            text: `Started live analysis for ${args.path} with watch ID: ${args.watch_id}`
+          }]
+        };
+      }
+
+      case "unwatch_file": {
+        if (!args.watch_id) {
+          throw new Error("watch_id is required");
+        }
+        
+        if (liveWatchers.has(args.watch_id)) {
+          liveWatchers.get(args.watch_id).close();
+          liveWatchers.delete(args.watch_id);
+          return {
+            content: [{
+              type: "text",
+              text: `Stopped live analysis for watch ID: ${args.watch_id}`
+            }]
+          };
+        } else {
+          throw new Error(`No active watch session found with ID: ${args.watch_id}`);
+        }
+      }
+
+      case "list_watch_sessions": {
+        const sessions = Array.from(liveWatchers.keys());
+        return {
+          content: [{
+            type: "text",
+            text: `Active watch sessions: ${sessions.length}\n${sessions.map(id => `- ${id}`).join('\n')}`
           }]
         };
       }
@@ -246,6 +375,43 @@ async function analyzeFile(filePath) {
     };
   } catch (error) {
     throw new Error(`Failed to analyze file ${filePath}: ${error.message}`);
+  }
+}
+
+// Analyze file and report results (for live analysis)
+async function analyzeAndReport(filePath) {
+  try {
+    // Only analyze supported file types
+    const extension = path.extname(filePath).toLowerCase();
+    const supportedExtensions = ['.js', '.jsx', '.ts', '.tsx'];
+    
+    if (!supportedExtensions.includes(extension)) {
+      return;
+    }
+    
+    const result = await analyzeFile(filePath);
+    
+    // Report only if there are issues
+    if (result.errorCount > 0 || result.warningCount > 0) {
+      console.log(`[LIVE ANALYSIS] ${filePath}: ${result.errorCount} errors, ${result.warningCount} warnings`);
+      
+      // Show first few issues
+      if (result.results && result.results.length > 0) {
+        const messages = result.results[0].messages || [];
+        messages.slice(0, 3).forEach(msg => {
+          const severity = msg.severity === 1 ? "WARN" : "ERROR";
+          console.log(`  ${severity} ${msg.ruleId || 'N/A'}: ${msg.message} (line ${msg.line})`);
+        });
+        
+        if (messages.length > 3) {
+          console.log(`  ... and ${messages.length - 3} more issues`);
+        }
+      }
+    } else {
+      console.log(`[LIVE ANALYSIS] ${filePath}: No issues found`);
+    }
+  } catch (error) {
+    console.error(`[LIVE ANALYSIS] Error analyzing ${filePath}:`, error.message);
   }
 }
 
@@ -409,6 +575,11 @@ function getFixSuggestion(ruleId, message) {
 // Handle graceful shutdown
 process.on("SIGINT", async () => {
   console.log("Shutting down Ultra Debugger MCP server...");
+  // Close all active watchers
+  for (const [id, watcher] of liveWatchers) {
+    watcher.close();
+  }
+  liveWatchers.clear();
   process.exit(0);
 });
 
@@ -417,6 +588,7 @@ async function runServer() {
   await server.connect(transport);
   console.log("Ultra Debugger MCP Server running on stdio");
   console.log("Ready to analyze JavaScript/TypeScript/JSX/TSX files for potential issues");
+  console.log("Supports live analysis with file watching capabilities");
 }
 
 // Run the server if this file is executed directly
