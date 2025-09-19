@@ -1,5 +1,7 @@
 # Ultra Debugger
 
+![Ultra Debugger Logo](ultra-debugger.png)
+
 A robust Model Context Protocol (MCP) debugger for JavaScript, TypeScript, JSX, and TSX files. This tool leverages industry-standard tools like ESLint, TypeScript ESLint, and React ESLint plugins to provide comprehensive analysis and debugging capabilities for AI-generated code.
 
 ## Key Features
@@ -227,6 +229,13 @@ AI assistants that support the Model Context Protocol can use the Ultra Debugger
 4. Offer specific suggestions for resolving issues
 5. Monitor code changes in real-time for continuous feedback
 6. Provide detailed, context-aware fix recommendations
+
+## Project Icon
+
+This project includes a custom icon ([ultra-debugger.png](ultra-debugger.png)) that can be used as:
+- GitHub repository icon
+- MCP tool identity
+- Application logo
 
 ## Limitations
 

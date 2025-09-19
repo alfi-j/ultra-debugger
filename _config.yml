@@ -1,0 +1,5 @@
+theme: jekyll-theme-minimal
+title: Ultra Debugger
+logo: ultra-debugger.png
+description: A robust Model Context Protocol debugger for JavaScript, TypeScript, JSX, and TSX files
+show_downloads: true

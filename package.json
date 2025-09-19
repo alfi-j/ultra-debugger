@@ -34,5 +34,12 @@
   },
   "bin": {
     "ultra-debugger": "src/mcp/ultra-debugger-mcp.js"
-  }
+  },
+  "files": [
+    "src/",
+    "test/",
+    "ultra-debugger.png",
+    "mcp.config.json",
+    "manifest.json"
+  ]
 }
