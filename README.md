@@ -1,62 +1,71 @@
-# Ultra Debugger
+# Ultra Debugger MCP Server
 
-![Ultra Debugger Logo](ultra-debugger.ico)
+This is the Model Context Protocol (MCP) server for the Ultra Debugger tool.
 
-A Model Context Protocol (MCP) debugger for JavaScript, TypeScript, JSX, and TSX files. Uses ESLint and related tools to find and fix code issues.
+## Prerequisites
 
-## Features
-
-- **MCP Integration**: Works with AI assistants that support MCP
-- **Multi-language Support**: JavaScript, TypeScript, JSX, and TSX
-- **Real-time Analysis**: Instant feedback on code changes
-- **Fix Suggestions**: Detailed recommendations for resolving issues
-
-## How It Works
-
-Analyzes code using:
-1. ESLint for JavaScript issues
-2. @typescript-eslint for TypeScript-specific problems
-3. eslint-plugin-react for React/JSX best practices
-4. Live file watching for real-time feedback
+- Node.js version 18 or higher
 
 ## Installation
 
 ```bash
-git clone <repository-url>
-cd ultra-debugger
 npm install
 ```
 
-## Usage
-
-### As an MCP Server
+## Running the Server
 
 ```bash
 npm start
 ```
 
-### Programmatic Usage
+Or directly with Node.js:
 
-```javascript
-const { analyzeFile } = require('./src/mcp/ultra-debugger-mcp.js');
-
-analyzeFile('path/to/your/file.tsx')
-  .then(result => console.log(result))
-  .catch(error => console.error(error));
+```bash
+node src/mcp/ultra-debugger-mcp.js
 ```
 
-## Supported File Types
+## MCP Endpoints
 
-- JavaScript (.js)
-- TypeScript (.ts)
-- React JSX (.jsx)
-- TypeScript with React (.tsx)
+The server provides the following MCP endpoints:
 
-## Integration with AI Assistants
+1. `/mcp/initialize` - Initialize the MCP connection
+2. `/mcp/tools/list` - List available debugging tools
+3. `/mcp/tools/call` - Execute a specific debugging tool
 
-AI assistants with MCP support can use Ultra Debugger to:
-1. Analyze generated code
-2. Find syntax errors and bugs
-3. Get code quality improvements
-4. Monitor code changes in real-time
-5. Receive detailed fix recommendations
+## Available Tools
+
+1. `debug_code` - Debug a piece of code and provide insights
+2. `analyze_performance` - Analyze code performance and suggest improvements
+
+## Configuration
+
+The server configuration can be found in:
+- [mcp.config.json](mcp.config.json) - MCP specific configuration
+- [manifest.json](manifest.json) - Server manifest file
+
+## Troubleshooting
+
+If you encounter the error `failed to initialize MCP client for ultra-debugger: transport error: context deadline exceeded`, try the following:
+
+1. Make sure the server is running properly with `npm start`
+2. Check that you're using Node.js version 18 or higher
+3. Verify that the port (default 3000) is not blocked by firewall
+4. Ensure that all required files are present in the project directory
+5. Check that the server responds to the initialization endpoint: `curl http://localhost:3000/mcp/initialize`
+
+## Example Usage
+
+After starting the server, you can test it with curl:
+
+```bash
+# Initialize the MCP connection
+curl http://localhost:3000/mcp/initialize
+
+# List available tools
+curl http://localhost:3000/mcp/tools/list
+
+# Call a tool
+curl -X POST http://localhost:3000/mcp/tools/call \
+  -H "Content-Type: application/json" \
+  -d '{"name": "debug_code", "arguments": {"code": "console.log(\"Hello World\");", "language": "javascript"}}'
+```

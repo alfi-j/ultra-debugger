@@ -1,15 +1,13 @@
 {
-  "short_name": "Ultra Debugger",
-  "name": "Ultra Debugger MCP Tool",
-  "icons": [
-    {
-      "src": "/ultra-debugger.ico",
-      "type": "image/x-icon",
-      "sizes": "512x512"
-    }
-  ],
-  "start_url": ".",
-  "display": "standalone",
-  "theme_color": "#000000",
-  "background_color": "#ffffff"
+  "name": "ultra-debugger",
+  "version": "1.0.0",
+  "description": "Ultra Debugger MCP Server",
+  "capabilities": {
+    "tools": {}
+  },
+  "permissions": [],
+  "entrypoint": {
+    "command": "node",
+    "args": ["src/mcp/ultra-debugger-mcp.js"]
+  }
 }

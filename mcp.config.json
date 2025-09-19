@@ -1,9 +1,9 @@
 {
-  "mcpServers": {
-    "ultra-debugger": {
-      "command": "node",
-      "args": ["src/mcp/ultra-debugger-mcp.js"],
-      "env": {}
-    }
-  }
+  "name": "ultra-debugger",
+  "version": "1.0.0",
+  "description": "Ultra Debugger MCP Configuration",
+  "entrypoint": "./src/mcp/ultra-debugger-mcp.js",
+  "manifest": "./manifest.json",
+  "port": 3000,
+  "timeout": 30000
 }

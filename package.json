@@ -1,45 +1,21 @@
 {
-  "name": "ultra-debugger",
+  "name": "ultra-debugger-mcp",
   "version": "1.0.0",
-  "description": "A robust Model Context Protocol (MCP) debugger for JavaScript, TypeScript, JSX, and TSX files with live analysis capabilities",
+  "description": "MCP Server for Ultra Debugger",
   "main": "src/mcp/ultra-debugger-mcp.js",
   "scripts": {
     "start": "node src/mcp/ultra-debugger-mcp.js",
-    "test": "node test/analysis-test.js"
+    "dev": "node src/mcp/ultra-debugger-mcp.js"
   },
   "keywords": [
-    "debugger",
-    "javascript",
-    "typescript",
-    "jsx",
-    "tsx",
-    "eslint",
     "mcp",
-    "ai",
-    "code-analysis",
-    "react",
-    "live-analysis",
-    "code-quality"
+    "debugger",
+    "ultra-debugger"
   ],
   "author": "Ultra Debugger Team",
   "license": "MIT",
-  "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.0.0",
-    "eslint": "^8.0.0",
-    "typescript": "^5.0.0",
-    "@typescript-eslint/eslint-plugin": "^6.0.0",
-    "@typescript-eslint/parser": "^6.0.0",
-    "eslint-plugin-react": "^7.0.0",
-    "chokidar": "^3.5.0"
-  },
-  "bin": {
-    "ultra-debugger": "src/mcp/ultra-debugger-mcp.js"
-  },
-  "files": [
-    "src/",
-    "test/",
-    "ultra-debugger.png",
-    "mcp.config.json",
-    "manifest.json"
-  ]
+  "dependencies": {},
+  "engines": {
+    "node": ">=18.0.0"
+  }
 }
