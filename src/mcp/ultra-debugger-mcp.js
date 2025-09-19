@@ -785,4 +785,4 @@ if (require.main === module) {
   runServer().catch(console.error);
 }
 
-module.exports = { server, runServer, analyzeFile, analyzeMultipleFiles };
+module.exports = { server, runServer, analyzeFile, analyzeMultipleFiles, analyzeEnvironment };

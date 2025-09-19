@@ -1,9 +1,10 @@
-const { analyzeEnvironment } = require('../src/mcp/ultra-debugger-mcp.js');
-
 // Test the environment analysis functionality
 async function testEnvironmentAnalysis() {
   try {
     console.log('Testing Ultra Debugger environment analysis functionality...');
+    
+    // Dynamically import the function
+    const { analyzeEnvironment } = await import('../src/mcp/ultra-debugger-mcp.js');
     
     // Test all environment checks
     console.log('\n--- Testing all environment checks ---');
