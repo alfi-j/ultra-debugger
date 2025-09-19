@@ -52,6 +52,24 @@ The Ultra Debugger analyzes code using multiple approaches:
    - Unreachable code
    - Common coding issues
 
+## MCP Configuration
+
+To use this tool with mcp.so or other MCP registries, you need a proper configuration file. The tool expects an `mcp.config.json` file with the following format:
+
+```json
+{
+  "mcpServers": {
+    "ultra-debugger": {
+      "command": "node",
+      "args": ["src/mcp/ultra-debugger-mcp.js"],
+      "env": {}
+    }
+  }
+}
+```
+
+This configuration file is included in the repository as `mcp.config.json`.
+
 ## MCP Tools
 
 When running as an MCP server, the Ultra Debugger exposes the following tools:

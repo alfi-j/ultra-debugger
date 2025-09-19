@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "ultra-debugger": {
+      "command": "node",
+      "args": ["src/mcp/ultra-debugger-mcp.js"],
+      "env": {}
+    }
+  }
+}
