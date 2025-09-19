@@ -5,6 +5,7 @@ const { ESLint } = require("eslint");
 const fs = require("fs").promises;
 const path = require("path");
 const chokidar = require("chokidar");
+const os = require("os");
 
 // Create the MCP server
 const server = new Server(
@@ -19,6 +20,30 @@ const server = new Server(
 // Store analysis results
 let lastAnalysisResult = null;
 let liveWatchers = new Map(); // Store active file watchers for live analysis
+let environmentInfo = {}; // Store environment information
+
+// Collect environment information at startup
+function collectEnvironmentInfo() {
+  environmentInfo = {
+    platform: os.platform(),
+    arch: os.arch(),
+    nodeVersion: process.version,
+    cwd: process.cwd(),
+    homedir: os.homedir(),
+    tmpdir: os.tmpdir(),
+    hostname: os.hostname(),
+    uptime: os.uptime(),
+    loadavg: os.loadavg(),
+    totalmem: os.totalmem(),
+    freemem: os.freemem(),
+    cpus: os.cpus(),
+    networkInterfaces: os.networkInterfaces(),
+    userInfo: os.userInfo ? os.userInfo() : null
+  };
+}
+
+// Collect environment information at startup
+collectEnvironmentInfo();
 
 // Register the list_tools handler
 server.setRequestHandler(ListToolsRequestSchema, async () => {
@@ -108,6 +133,27 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           type: "object",
           properties: {}
         }
+      },
+      {
+        name: "get_environment_info",
+        description: "Get information about the current runtime environment",
+        inputSchema: {
+          type: "object",
+          properties: {}
+        }
+      },
+      {
+        name: "analyze_environment",
+        description: "Analyze the current runtime environment for potential issues",
+        inputSchema: {
+          type: "object",
+          properties: {
+            check: {
+              type: "string",
+              description: "Specific environment aspect to check (memory, disk, network, all)"
+            }
+          }
+        }
       }
     ]
   };
@@ -174,7 +220,9 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         const watcher = chokidar.watch(args.path, {
           persistent: true,
           ignoreInitial: true,
-          depth: 5 // Limit recursion depth
+          depth: 5, // Limit recursion depth
+          ignored: [/(^|[/\\])\../, /node_modules/, /\.git/], // Ignore dotfiles, node_modules, and .git
+          ignorePermissionErrors: true
         });
         
         // Store the watcher
@@ -269,6 +317,27 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           content: [{
             type: "text",
             text: JSON.stringify(suggestions, null, 2)
+          }]
+        };
+      }
+
+      case "get_environment_info": {
+        // Refresh environment info
+        collectEnvironmentInfo();
+        return {
+          content: [{
+            type: "text",
+            text: JSON.stringify(environmentInfo, null, 2)
+          }]
+        };
+      }
+
+      case "analyze_environment": {
+        const issues = await analyzeEnvironment(args.check || "all");
+        return {
+          content: [{
+            type: "text",
+            text: `Environment analysis completed. Found ${issues.length} potential issues:\n${issues.map((issue, index) => `${index + 1}. ${issue}`).join('\n')}`
           }]
         };
       }
@@ -621,6 +690,63 @@ function getFixSuggestion(ruleId, message, filePath) {
   return genericSuggestions[ruleId] || "Review the code and fix according to the error message";
 }
 
+// Analyze environment for potential issues
+async function analyzeEnvironment(checkType) {
+  const issues = [];
+  
+  // Refresh environment info
+  collectEnvironmentInfo();
+  
+  // Memory analysis
+  if (checkType === "memory" || checkType === "all") {
+    const memUsage = process.memoryUsage();
+    const freeMemPercentage = (environmentInfo.freemem / environmentInfo.totalmem) * 100;
+    
+    if (freeMemPercentage < 10) {
+      issues.push(`Low system memory: ${freeMemPercentage.toFixed(2)}% free`);
+    }
+    
+    if (memUsage.heapUsed / memUsage.heapTotal > 0.9) {
+      issues.push(`High Node.js heap usage: ${(memUsage.heapUsed / 1024 / 1024).toFixed(2)} MB / ${(memUsage.heapTotal / 1024 / 1024).toFixed(2)} MB`);
+    }
+  }
+  
+  // Disk space analysis
+  if (checkType === "disk" || checkType === "all") {
+    try {
+      const diskStats = fs.statfs ? await fs.statfs(environmentInfo.cwd) : null;
+      if (diskStats) {
+        const freePercentage = (diskStats.bfree / diskStats.blocks) * 100;
+        if (freePercentage < 5) {
+          issues.push(`Low disk space: ${freePercentage.toFixed(2)}% free in current directory`);
+        }
+      }
+    } catch (error) {
+      // Ignore errors in disk stats
+    }
+  }
+  
+  // CPU analysis
+  if (checkType === "cpu" || checkType === "all") {
+    const loadAvg = environmentInfo.loadavg;
+    const cpuCount = environmentInfo.cpus.length;
+    
+    // Check if load average is high (for last 5 minutes)
+    if (loadAvg[1] > cpuCount * 0.8) {
+      issues.push(`High CPU load: ${loadAvg[1].toFixed(2)} average load over 5 minutes (${cpuCount} CPU cores)`);
+    }
+  }
+  
+  // Process analysis
+  if (checkType === "process" || checkType === "all") {
+    if (environmentInfo.uptime < 60) {
+      issues.push("Process recently started (less than 1 minute ago)");
+    }
+  }
+  
+  return issues;
+}
+
 // Handle graceful shutdown
 process.on("SIGINT", async () => {
   console.log("Shutting down Ultra Debugger MCP server...");
@@ -632,12 +758,26 @@ process.on("SIGINT", async () => {
   process.exit(0);
 });
 
+// Periodically check environment
+setInterval(async () => {
+  try {
+    const issues = await analyzeEnvironment("all");
+    if (issues.length > 0) {
+      console.log(`[ENVIRONMENT] ${issues.length} potential issues detected:`);
+      issues.forEach(issue => console.log(`  - ${issue}`));
+    }
+  } catch (error) {
+    console.error("[ENVIRONMENT] Error during periodic environment analysis:", error.message);
+  }
+}, 30000); // Check every 30 seconds
+
 async function runServer() {
   const transport = new StdioServerTransport();
   await server.connect(transport);
   console.log("Ultra Debugger MCP Server running on stdio");
   console.log("Ready to analyze JavaScript/TypeScript/JSX/TSX files for potential issues");
   console.log("Supports live analysis with file watching capabilities");
+  console.log("Environment monitoring enabled");
 }
 
 // Run the server if this file is executed directly

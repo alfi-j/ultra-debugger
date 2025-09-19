@@ -15,6 +15,7 @@ A robust Model Context Protocol (MCP) debugger for JavaScript, TypeScript, JSX, 
 - **Enhanced Fix Suggestions**: Provides detailed, context-aware suggestions for resolving issues
 - **Multi-file Support**: Analyze single files or entire projects at once
 - **Live Analysis**: Real-time monitoring of code changes with instant feedback
+- **Environment Analysis**: Monitors system resources and runtime environment
 - **Fallback Analysis**: Uses custom analysis when ESLint is not available
 
 ## How It Works
@@ -98,6 +99,10 @@ When running as an MCP server, the Ultra Debugger exposes the following tools:
 
 7. **get_fix_suggestions** - Get suggestions for fixing issues found in the last analysis
    - No parameters
+8. **get_environment_info** - Get information about the current runtime environment
+   - No parameters
+9. **analyze_environment** - Analyze the current runtime environment for potential issues
+   - Parameters: `check` (string): Specific environment aspect to check (memory, disk, network, all)
 
 ## Installation
 
@@ -219,6 +224,20 @@ To use live analysis with MCP tools:
 3. Call `unwatch_file` with the watch ID to stop monitoring
 4. Use `list_watch_sessions` to see active watch sessions
 
+## Environment Analysis
+
+The Ultra Debugger continuously monitors the runtime environment and can perform specific checks:
+
+1. **Memory Monitoring**: Tracks system and Node.js memory usage
+2. **CPU Load**: Monitors system CPU load averages
+3. **Disk Space**: Checks available disk space
+4. **Process Information**: Monitors process uptime and other stats
+5. **Periodic Checks**: Automatically performs environment analysis every 30 seconds
+
+To use environment analysis with MCP tools:
+1. Call `get_environment_info` to get current environment details
+2. Call `analyze_environment` with a specific check type (memory, cpu, disk, all) to identify potential issues
+
 ## Integration with AI Assistants
 
 AI assistants that support the Model Context Protocol can use the Ultra Debugger to:
@@ -229,6 +248,7 @@ AI assistants that support the Model Context Protocol can use the Ultra Debugger
 4. Offer specific suggestions for resolving issues
 5. Monitor code changes in real-time for continuous feedback
 6. Provide detailed, context-aware fix recommendations
+7. Monitor system resources and environment for potential issues
 
 ## Project Icon
 
