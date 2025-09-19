@@ -3,8 +3,8 @@
   "name": "Ultra Debugger MCP Tool",
   "icons": [
     {
-      "src": "ultra-debugger.png",
-      "type": "image/png",
+      "src": "/ultra-debugger.ico",
+      "type": "image/x-icon",
       "sizes": "512x512"
     }
   ],
