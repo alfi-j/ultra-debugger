@@ -60,10 +60,3 @@ AI assistants with MCP support can use Ultra Debugger to:
 3. Get code quality improvements
 4. Monitor code changes in real-time
 5. Receive detailed fix recommendations
-
-## Project Icon
-
-This project includes a custom icon ([ultra-debugger.png](ultra-debugger.png)) for use as:
-- GitHub repository icon
-- MCP tool identity
-- Application logo
