@@ -115,3 +115,7 @@ results/
 # Debug files created by the ultra-debugger
 debug-report.json
 fixed-code.js
+
+# Package lock files
+package-lock.json
+yarn.lock

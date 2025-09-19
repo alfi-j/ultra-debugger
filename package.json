@@ -5,17 +5,22 @@
   "main": "src/middleware/debugController.js",
   "scripts": {
     "debug": "node ultra-debugger.js",
-    "test": "node ultra-debugger.js test/example.js"
+    "test": "node ultra-debugger.js test/example.js",
+    "mcp": "node src/mcp/mcp-server.js",
+    "test-mcp": "node src/mcp/simple-test.js"
   },
   "keywords": [
     "debugger",
     "ai",
     "automation",
-    "code-analysis"
+    "code-analysis",
+    "mcp"
   ],
   "author": "Ultra Debugger Team",
   "license": "MIT",
-  "dependencies": {},
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0"
+  },
   "devDependencies": {},
   "bin": {
     "ultra-debugger": "ultra-debugger.js"

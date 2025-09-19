@@ -35,7 +35,13 @@ Middleware that orchestrates the entire debugging process:
 - Coordinates all components
 - Generates comprehensive reports
 - Saves results to files
-- Provides CLI interface
+- Provides programmatic interface
+
+### 5. MCP Server (`src/mcp/mcp-server.js`)
+Model Context Protocol server that allows integration with MCP-compatible tools:
+- Exposes debugging functionality as MCP tools
+- Can be used with AI assistants and IDEs that support MCP
+- Provides structured responses for debugging results
 
 ## Installation
 
@@ -45,6 +51,9 @@ git clone <repository-url>
 
 # Navigate to the project directory
 cd ultra-debugger
+
+# Install dependencies
+npm install
 ```
 
 ## Usage
@@ -66,6 +75,13 @@ node ultra-debugger.js app.js --no-report --no-fixed
 
 # Get help
 node ultra-debugger.js --help
+```
+
+### MCP Server Mode
+
+```bash
+# Run as an MCP server
+npm run mcp
 ```
 
 ### Programmatic Usage
@@ -95,6 +111,49 @@ controller.debugMultiple(['file1.js', 'file2.js', 'file3.js'])
   });
 ```
 
+## MCP Tools
+
+When running in MCP mode, the Ultra Debugger exposes the following tools:
+
+1. **debug_file** - Debug a single JavaScript file
+   - Parameters: `file_path` (string)
+
+2. **debug_multiple_files** - Debug multiple JavaScript files
+   - Parameters: `file_paths` (array of strings)
+
+3. **get_last_debug_report** - Get the detailed report from the last debug operation
+   - No parameters
+
+4. **get_fix_suggestions** - Get suggestions for fixing issues found in the last debug operation
+   - No parameters
+
+## Model Context Protocol (MCP) Integration
+
+The Ultra Debugger supports the Model Context Protocol (MCP), which enables integration with AI assistants and development tools. This allows AI systems to automatically debug code they've generated or are working with.
+
+### What is MCP?
+
+MCP is an open protocol that enables secure communication between AI assistants and external tools. It standardizes how AI systems can access and interact with tools, making it easier to extend their capabilities.
+
+### Benefits of MCP Integration
+
+1. **AI Assistant Integration**: Works with Claude, ChatGPT, and other AI assistants that support MCP
+2. **Automated Debugging**: AI assistants can automatically debug code without manual intervention
+3. **Structured Responses**: Provides structured data that AI assistants can easily process and interpret
+4. **Tool Discovery**: AI assistants can automatically discover available debugging tools
+
+### Running in MCP Mode
+
+To run the Ultra Debugger as an MCP server:
+
+```bash
+npm run mcp
+```
+
+This starts the server in stdio mode, which can be connected to by any MCP-compatible client.
+
+See [MCP_DOCUMENTATION.md](MCP_DOCUMENTATION.md) for detailed information about the MCP implementation.
+
 ## How It Works
 
 1. **Static Analysis**: The Code Analyzer scans the source code without executing it to find potential issues.
@@ -114,6 +173,7 @@ controller.debugMultiple(['file1.js', 'file2.js', 'file3.js'])
 - **Multiple File Support**: Can debug single files or batches of files.
 - **Configurable Output**: Control what gets saved and where.
 - **Enhanced Detection**: Improved detection of AI-specific code issues.
+- **MCP Integration**: Can be used with MCP-compatible tools and AI assistants.
 
 ## Limitations
 
@@ -130,6 +190,7 @@ controller.debugMultiple(['file1.js', 'file2.js', 'file3.js'])
 - More flexible CLI options
 - Enhanced sandboxing with more built-in functions
 - Better multi-file debugging support
+- MCP server mode for integration with AI tools
 
 ## Future Improvements
 
@@ -140,3 +201,4 @@ controller.debugMultiple(['file1.js', 'file2.js', 'file3.js'])
 - Web-based dashboard for visualizing debug reports
 - Integration with popular development environments
 - Automated refactoring suggestions
+- Enhanced MCP tool capabilities
