@@ -1,0 +1,12 @@
+{
+  "name": "ultra-debugger",
+  "version": "1.0.0",
+  "description": "A robust Model Context Protocol debugger for JavaScript code",
+  "capabilities": {
+    "tools": {}
+  },
+  "server": {
+    "command": "node",
+    "args": ["src/mcp/ultra-debugger-mcp.js"]
+  }
+}

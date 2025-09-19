@@ -1,28 +1,27 @@
 {
   "name": "ultra-debugger",
   "version": "1.0.0",
-  "description": "An automated debugging tool for AI-generated software",
-  "main": "src/middleware/debugController.js",
+  "description": "A robust Model Context Protocol debugger for JavaScript code",
+  "main": "src/mcp/ultra-debugger-mcp.js",
   "scripts": {
-    "debug": "node ultra-debugger.js",
-    "test": "node ultra-debugger.js test/example.js",
-    "mcp": "node src/mcp/mcp-server.js",
-    "test-mcp": "node src/mcp/simple-test.js"
+    "start": "node src/mcp/ultra-debugger-mcp.js",
+    "test": "node test/analysis-test.js"
   },
   "keywords": [
     "debugger",
+    "javascript",
+    "eslint",
+    "mcp",
     "ai",
-    "automation",
-    "code-analysis",
-    "mcp"
+    "code-analysis"
   ],
   "author": "Ultra Debugger Team",
   "license": "MIT",
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.0.0"
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "eslint": "^8.0.0"
   },
-  "devDependencies": {},
   "bin": {
-    "ultra-debugger": "ultra-debugger.js"
+    "ultra-debugger": "src/mcp/ultra-debugger-mcp.js"
   }
 }
