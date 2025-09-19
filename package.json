@@ -1,7 +1,7 @@
 {
   "name": "ultra-debugger",
   "version": "1.0.0",
-  "description": "A robust Model Context Protocol debugger for JavaScript code",
+  "description": "A robust Model Context Protocol debugger for JavaScript, TypeScript, JSX, and TSX files",
   "main": "src/mcp/ultra-debugger-mcp.js",
   "scripts": {
     "start": "node src/mcp/ultra-debugger-mcp.js",
@@ -10,16 +10,24 @@
   "keywords": [
     "debugger",
     "javascript",
+    "typescript",
+    "jsx",
+    "tsx",
     "eslint",
     "mcp",
     "ai",
-    "code-analysis"
+    "code-analysis",
+    "react"
   ],
   "author": "Ultra Debugger Team",
   "license": "MIT",
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.0.0",
-    "eslint": "^8.0.0"
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
+    "eslint": "^8.0.0",
+    "eslint-plugin-react": "^7.0.0",
+    "typescript": "^5.9.2"
   },
   "bin": {
     "ultra-debugger": "src/mcp/ultra-debugger-mcp.js"

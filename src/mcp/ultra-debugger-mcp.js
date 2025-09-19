@@ -3,6 +3,7 @@ const { StdioServerTransport } = require("@modelcontextprotocol/sdk/server/stdio
 const { CallToolRequestSchema, ListToolsRequestSchema } = require("@modelcontextprotocol/sdk/types.js");
 const { ESLint } = require("eslint");
 const fs = require("fs").promises;
+const path = require("path");
 
 // Create the MCP server
 const server = new Server(
@@ -22,29 +23,29 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
   return {
     tools: [
       {
-        name: "analyze_js_file",
-        description: "Analyze a JavaScript file for potential issues using ESLint",
+        name: "analyze_file",
+        description: "Analyze a JavaScript/TypeScript/JSX/TSX file for potential issues using ESLint and other tools",
         inputSchema: {
           type: "object",
           properties: {
             file_path: {
               type: "string",
-              description: "Path to the JavaScript file to analyze"
+              description: "Path to the JavaScript/TypeScript/JSX/TSX file to analyze"
             }
           },
           required: ["file_path"]
         }
       },
       {
-        name: "analyze_multiple_js_files",
-        description: "Analyze multiple JavaScript files for potential issues",
+        name: "analyze_multiple_files",
+        description: "Analyze multiple JavaScript/TypeScript/JSX/TSX files for potential issues",
         inputSchema: {
           type: "object",
           properties: {
             file_paths: {
               type: "array",
               items: { type: "string" },
-              description: "Array of paths to JavaScript files to analyze"
+              description: "Array of paths to JavaScript/TypeScript/JSX/TSX files to analyze"
             }
           },
           required: ["file_paths"]
@@ -76,12 +77,12 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
   try {
     switch (name) {
-      case "analyze_js_file": {
+      case "analyze_file": {
         if (!args.file_path) {
           throw new Error("file_path is required");
         }
 
-        lastAnalysisResult = await analyzeJsFile(args.file_path);
+        lastAnalysisResult = await analyzeFile(args.file_path);
         
         return {
           content: [{
@@ -91,12 +92,12 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         };
       }
 
-      case "analyze_multiple_js_files": {
+      case "analyze_multiple_files": {
         if (!args.file_paths || !Array.isArray(args.file_paths)) {
           throw new Error("file_paths array is required");
         }
 
-        lastAnalysisResult = await analyzeMultipleJsFiles(args.file_paths);
+        lastAnalysisResult = await analyzeMultipleFiles(args.file_paths);
         
         return {
           content: [{
@@ -157,11 +158,16 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
   }
 });
 
-// Analyze a single JavaScript file
-async function analyzeJsFile(filePath) {
+// Analyze a single file (JavaScript/TypeScript/JSX/TSX)
+async function analyzeFile(filePath) {
   try {
     // Check if file exists
     await fs.access(filePath);
+    
+    // Determine file type
+    const extension = path.extname(filePath).toLowerCase();
+    const isTypeScript = extension === '.ts' || extension === '.tsx';
+    const isReact = extension === '.jsx' || extension === '.tsx';
     
     // Try to use ESLint for analysis
     let results;
@@ -169,7 +175,8 @@ async function analyzeJsFile(filePath) {
     let warningCount = 0;
     
     try {
-      const eslint = new ESLint({
+      // Configure ESLint based on file type
+      const eslintConfig = {
         overrideConfig: {
           env: {
             es2022: true,
@@ -184,15 +191,48 @@ async function analyzeJsFile(filePath) {
             "no-dupe-keys": "error"
           }
         }
-      });
-
+      };
+      
+      // Add TypeScript support if needed
+      if (isTypeScript) {
+        eslintConfig.overrideConfig.parser = "@typescript-eslint/parser";
+        eslintConfig.overrideConfig.plugins = ["@typescript-eslint"];
+        eslintConfig.overrideConfig.extends = ["plugin:@typescript-eslint/recommended"];
+        // Add TypeScript-specific rules
+        eslintConfig.overrideConfig.rules = {
+          ...eslintConfig.overrideConfig.rules,
+          "@typescript-eslint/no-unused-vars": "warn",
+          "@typescript-eslint/no-explicit-any": "warn"
+        };
+      }
+      
+      // Add React/JSX support if needed
+      if (isReact) {
+        if (!eslintConfig.overrideConfig.plugins) {
+          eslintConfig.overrideConfig.plugins = [];
+        }
+        eslintConfig.overrideConfig.plugins.push("react");
+        eslintConfig.overrideConfig.settings = {
+          react: {
+            version: "detect"
+          }
+        };
+        // Add React-specific rules
+        eslintConfig.overrideConfig.rules = {
+          ...eslintConfig.overrideConfig.rules,
+          "react/react-in-jsx-scope": "off", // Not needed in React 17+
+          "react/prop-types": "off" // We're using TypeScript instead
+        };
+      }
+      
+      const eslint = new ESLint(eslintConfig);
       results = await eslint.lintFiles(filePath);
       errorCount = results.reduce((sum, r) => sum + r.errorCount, 0);
       warningCount = results.reduce((sum, r) => sum + r.warningCount, 0);
     } catch (eslintError) {
       // Fallback to basic analysis if ESLint fails
       console.warn("ESLint analysis failed, using basic analysis:", eslintError.message);
-      results = await basicJsAnalysis(filePath);
+      results = await basicAnalysis(filePath);
       errorCount = results.reduce((sum, r) => sum + r.errorCount, 0);
       warningCount = results.reduce((sum, r) => sum + r.warningCount, 0);
     }
@@ -209,8 +249,8 @@ async function analyzeJsFile(filePath) {
   }
 }
 
-// Basic JavaScript analysis as fallback
-async function basicJsAnalysis(filePath) {
+// Basic analysis as fallback
+async function basicAnalysis(filePath) {
   const content = await fs.readFile(filePath, 'utf8');
   
   const messages = [];
@@ -247,6 +287,22 @@ async function basicJsAnalysis(filePath) {
         errorCount++;
       }
     }
+    
+    // Check for common TypeScript/React patterns
+    const extension = path.extname(filePath).toLowerCase();
+    if (extension === '.ts' || extension === '.tsx') {
+      // Check for explicit any usage
+      if (line.includes(': any')) {
+        messages.push({
+          ruleId: "@typescript-eslint/no-explicit-any",
+          severity: 1, // warning
+          message: "Unexpected any. Specify a different type.",
+          line: index + 1,
+          column: line.indexOf(': any') + 1
+        });
+        warningCount++;
+      }
+    }
   });
   
   return [{
@@ -257,15 +313,15 @@ async function basicJsAnalysis(filePath) {
   }];
 }
 
-// Analyze multiple JavaScript files
-async function analyzeMultipleJsFiles(filePaths) {
+// Analyze multiple files
+async function analyzeMultipleFiles(filePaths) {
   const results = [];
   let totalErrors = 0;
   let totalWarnings = 0;
 
   for (const filePath of filePaths) {
     try {
-      const result = await analyzeJsFile(filePath);
+      const result = await analyzeFile(filePath);
       results.push(result);
       totalErrors += result.errorCount;
       totalWarnings += result.warningCount;
@@ -340,7 +396,11 @@ function getFixSuggestion(ruleId, message) {
     "no-unused-vars": "Remove the unused variable or use it in your code",
     "no-unreachable": "Remove the unreachable code or restructure your logic",
     "no-debugger": "Remove the debugger statement before deploying to production",
-    "no-dupe-keys": "Rename the duplicate object keys to be unique"
+    "no-dupe-keys": "Rename the duplicate object keys to be unique",
+    "@typescript-eslint/no-unused-vars": "Remove the unused variable or use it in your code, or prefix with an underscore",
+    "@typescript-eslint/no-explicit-any": "Specify a more specific type instead of 'any'",
+    "react/react-in-jsx-scope": "Import React or use the new JSX transform",
+    "react/prop-types": "Use TypeScript interfaces for prop typing instead"
   };
 
   return suggestions[ruleId] || "Review the code and fix according to the error message";
@@ -356,7 +416,7 @@ async function runServer() {
   const transport = new StdioServerTransport();
   await server.connect(transport);
   console.log("Ultra Debugger MCP Server running on stdio");
-  console.log("Ready to analyze JavaScript files for potential issues");
+  console.log("Ready to analyze JavaScript/TypeScript/JSX/TSX files for potential issues");
 }
 
 // Run the server if this file is executed directly
@@ -364,4 +424,4 @@ if (require.main === module) {
   runServer().catch(console.error);
 }
 
-module.exports = { server, runServer, analyzeJsFile, analyzeMultipleJsFiles };
+module.exports = { server, runServer, analyzeFile, analyzeMultipleFiles };

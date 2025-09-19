@@ -1,11 +1,14 @@
 # Ultra Debugger
 
-A robust Model Context Protocol (MCP) debugger specifically designed for JavaScript code. This tool leverages industry-standard tools like ESLint and custom analysis techniques to provide comprehensive analysis and debugging capabilities for AI-generated JavaScript code.
+A robust Model Context Protocol (MCP) debugger for JavaScript, TypeScript, JSX, and TSX files. This tool leverages industry-standard tools like ESLint, TypeScript ESLint, and React ESLint plugins to provide comprehensive analysis and debugging capabilities for AI-generated code.
 
 ## Key Features
 
 - **MCP Integration**: Works with AI assistants that support the Model Context Protocol
-- **ESLint Powered**: Uses ESLint with recommended rules for accurate JavaScript analysis
+- **Multi-language Support**: Analyzes JavaScript, TypeScript, JSX, and TSX files
+- **ESLint Powered**: Uses ESLint with recommended rules for accurate code analysis
+- **TypeScript Support**: Leverages @typescript-eslint for TypeScript-specific rules
+- **React Support**: Uses eslint-plugin-react for JSX/React-specific rules
 - **Real-time Analysis**: Identifies syntax errors, potential bugs, and code quality issues
 - **Fix Suggestions**: Provides actionable suggestions for resolving identified issues
 - **Multi-file Support**: Analyze single files or entire projects at once
@@ -13,15 +16,26 @@ A robust Model Context Protocol (MCP) debugger specifically designed for JavaScr
 
 ## How It Works
 
-The Ultra Debugger analyzes JavaScript code using two approaches:
+The Ultra Debugger analyzes code using multiple approaches:
 
-1. **Primary Analysis**: Uses ESLint with a comprehensive set of rules to detect:
+1. **JavaScript Analysis**: Uses ESLint with a comprehensive set of rules to detect:
    - Syntax errors
    - Potential bugs
    - Code quality issues
    - Best practices violations
 
-2. **Fallback Analysis**: When ESLint is not available, uses custom pattern matching to detect:
+2. **TypeScript Analysis**: Uses @typescript-eslint to detect TypeScript-specific issues:
+   - Type errors
+   - Unused variables
+   - Explicit any usage
+   - Other TypeScript best practices
+
+3. **React/JSX Analysis**: Uses eslint-plugin-react to detect React-specific issues:
+   - Component structure problems
+   - Prop validation issues
+   - React best practices
+
+4. **Fallback Analysis**: When ESLint is not available, uses custom pattern matching to detect:
    - Debugger statements
    - Unreachable code
    - Common coding issues
@@ -30,10 +44,10 @@ The Ultra Debugger analyzes JavaScript code using two approaches:
 
 When running as an MCP server, the Ultra Debugger exposes the following tools:
 
-1. **analyze_js_file** - Analyze a single JavaScript file
+1. **analyze_file** - Analyze a JavaScript/TypeScript/JSX/TSX file
    - Parameters: `file_path` (string)
 
-2. **analyze_multiple_js_files** - Analyze multiple JavaScript files
+2. **analyze_multiple_files** - Analyze multiple files
    - Parameters: `file_paths` (array of strings)
 
 3. **get_analysis_report** - Get the detailed report from the last analysis operation
@@ -69,10 +83,10 @@ This starts the Ultra Debugger as an MCP server that can be integrated with AI a
 ### Programmatic Usage
 
 ```javascript
-const { analyzeJsFile, analyzeMultipleJsFiles } = require('./src/mcp/ultra-debugger-mcp.js');
+const { analyzeFile, analyzeMultipleFiles } = require('./src/mcp/ultra-debugger-mcp.js');
 
 // Analyze a single file
-analyzeJsFile('path/to/your/file.js')
+analyzeFile('path/to/your/file.tsx')
   .then(result => {
     console.log('Analysis result:', result);
   })
@@ -81,7 +95,7 @@ analyzeJsFile('path/to/your/file.js')
   });
 
 // Analyze multiple files
-analyzeMultipleJsFiles(['file1.js', 'file2.js', 'file3.js'])
+analyzeMultipleFiles(['app.js', 'component.tsx', 'utils.jsx'])
   .then(results => {
     console.log('Multi-file analysis results:', results);
   })
@@ -90,43 +104,51 @@ analyzeMultipleJsFiles(['file1.js', 'file2.js', 'file3.js'])
   });
 ```
 
-## Supported JavaScript Features
+## Supported File Types
 
-The Ultra Debugger supports modern JavaScript features including:
+The Ultra Debugger supports modern web development file types including:
 
-- ES6+ syntax (arrow functions, destructuring, modules, etc.)
-- Node.js and browser environments
-- Modern ECMAScript features
+- **JavaScript** (.js)
+- **TypeScript** (.ts)
+- **React JSX** (.jsx)
+- **TypeScript with React** (.tsx)
 
 ## Rules and Detection
 
-The Ultra Debugger detects common JavaScript issues including:
+The Ultra Debugger detects common issues including:
 
+### JavaScript/TypeScript Rules:
 - **Critical Errors**: Undefined variables, unreachable code, duplicate keys
 - **Potential Bugs**: Unsafe operations, invalid regular expressions, improper comparisons
 - **Code Quality Issues**: Unused variables, extra semicolons, unnecessary casts
 - **Best Practices**: Proper error handling, safe control flow, valid syntax
 
+### TypeScript-Specific Rules:
+- **Type Safety**: Explicit any usage, unused variables
+- **TypeScript Best Practices**: Proper typing, interface usage
+
+### React/JSX-Specific Rules:
+- **Component Structure**: Proper component definitions
+- **Props Handling**: Prop validation, proper prop usage
+
 ## Integration with AI Assistants
 
 AI assistants that support the Model Context Protocol can use the Ultra Debugger to:
 
-1. Automatically analyze JavaScript code they generate
+1. Automatically analyze code they generate (JavaScript, TypeScript, React)
 2. Identify and fix syntax errors and potential bugs
 3. Provide code quality improvements
 4. Offer specific suggestions for resolving issues
 
 ## Limitations
 
-- Only works with JavaScript files (.js)
 - Does not execute code (static analysis only)
-- Does not support other languages (TypeScript, JSX, etc.)
 - Limited rules when falling back from ESLint
+- Requires proper file extensions to detect file type
 
 ## Future Improvements
 
-- TypeScript support
-- JSX/TSX support
-- Integration with additional linting tools
 - Automated code fixing capabilities
 - Web-based dashboard for analysis results
+- Integration with more linting tools
+- Support for additional frameworks (Vue, Angular, etc.)
